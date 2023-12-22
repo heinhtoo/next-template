@@ -6,6 +6,128 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "mongodb"
+  url      = env("NEXT_PUBLIC_MONGODB_URI")
+}
+
+enum Role {
+  Admin
+  SuperAdmin
+}
+
+model User {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  email         String   @unique
+  profile       String?
+  username      String
+  iv            String
+  encryptedData String
+  isBlocked     Boolean  @default(false)
+  role          Role     @default(Admin)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Author {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  prefix        String
+  name          String
+  highLightInfo Json[]
+  contactInfo   Json[]
+  socialUrls    String[]
+  biography     String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  chapterIds    String[]    @db.ObjectId
+  chapters      Chapter[]   @relation(fields: [chapterIds], references: [id])
+  isFeatured    Boolean     @default(false)
+  SiteVisit     SiteVisit[]
+}
+
+model Part {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  volumeNo  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Chapter {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  chapterNo     Int
+  title         String
+  publishedDate DateTime?
+
+  keywords  String[]
+  abstract  String
+  doiUrl    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  questions Question[]
+  authorIds String[]    @db.ObjectId
+  authors   Author[]    @relation(fields: [authorIds], references: [id])
+  SiteVisit SiteVisit[]
+}
+
+model Keyword {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+}
+
+model Testimonial {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String
+  title     String
+  message   String
+  rating    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ContactMsg {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Question {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String
+  question  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  chapter   Chapter  @relation(fields: [chapterId], references: [id])
+  chapterId String   @db.ObjectId
+}
+
+model Configuration {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderEmail         String
+  senderEmailPassword Json?
+  senderEmailHost     String
+  senderEmailPort     String
+  senderEmailTSL      Boolean
+  defaultAuthorEmail  String[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model SiteVisit {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  visitDate   String
+  ipAddress   String?
+  detailsInfo Json?
+  clickedDate DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  authorId  String?  @db.ObjectId
+  author    Author?  @relation(fields: [authorId], references: [id])
+  chapterId String?  @db.ObjectId
+  chapter   Chapter? @relation(fields: [chapterId], references: [id])
 }
