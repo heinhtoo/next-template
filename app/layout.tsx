@@ -6,6 +6,10 @@ import Navbar from "./_components/Navbar";
 import Footer from "./_components/Footer";
 import { getServerSession } from "next-auth";
 import { authOptions, isInternal } from "@/lib/authHelper";
+import InternalNavbar from "./_components/InternalNavbar";
+import InternalContainer from "./_components/InternalContainer";
+import { Toaster } from "@/components/ui/toaster";
+import SessionProvider from "@/components/providers/SessionProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,15 +26,21 @@ export default async function RootLayout({
   const session = await getServerSession(authOptions);
 
   if (isInternal(session)) {
-    <html lang="en">
-      <body className={inter.className}>
-        <main>
-          <Navbar />
-          {children}
-          <Footer />
-        </main>
-      </body>
-    </html>;
+    return (
+      <html lang="en">
+        <body className={inter.className}>
+          <SessionProvider session={session}>
+            <main className={`flex min-h-screen flex-row`}>
+              <InternalNavbar session={session} />
+              <InternalContainer session={session}>
+                {children}
+                <Toaster />
+              </InternalContainer>
+            </main>
+          </SessionProvider>
+        </body>
+      </html>
+    );
   }
 
   return (
